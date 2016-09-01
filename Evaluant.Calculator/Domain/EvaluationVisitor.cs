@@ -49,8 +49,30 @@ namespace NCalc.Domain
 
         public int CompareUsingMostPreciseType(object a, object b)
         {
-            Type mpt = GetMostPreciseType(a.GetType(), b.GetType());
-            return Comparer.Default.Compare(Convert.ChangeType(a, mpt), Convert.ChangeType(b, mpt));
+            object ao, bo;
+
+            try
+            {
+                bo = Convert.ChangeType(b, a.GetType());
+                ao = a;
+            }
+            catch (InvalidCastException)
+            {
+                try
+                {
+                    ao = Convert.ChangeType(a, b.GetType());
+                    bo = b;
+                }
+                catch (InvalidCastException)
+                {
+                    Type mpt = GetMostPreciseType(a.GetType(), b.GetType());
+                    return Comparer.Default.Compare(
+                        Convert.ChangeType(a, mpt),
+                        Convert.ChangeType(b, mpt));
+                }
+            }
+
+            return Comparer.Default.Compare(ao, bo);
         }
 
         public override void Visit(TernaryExpression expression)
@@ -85,7 +107,7 @@ namespace NCalc.Domain
                                      if (leftValue == null)
                                      {
                                          expression.LeftExpression.Accept(this);
-                                         leftValue = Result;
+                                         leftValue = Result ?? CalcNull.Value;
                                      }
                                      return leftValue;
                                  };
@@ -97,7 +119,7 @@ namespace NCalc.Domain
                 if (rightValue == null)
                 {
                     expression.RightExpression.Accept(this);
-                    rightValue = Result;
+                    rightValue = Result ?? CalcNull.Value;
                 }
                 return rightValue;
             };
@@ -105,42 +127,81 @@ namespace NCalc.Domain
             switch (expression.Type)
             {
                 case BinaryExpressionType.And:
-                    Result = Convert.ToBoolean(left()) && Convert.ToBoolean(right());
+                    Result = (left() != CalcNull.Value && Convert.ToBoolean(left()))
+                        && (right() != CalcNull.Value && Convert.ToBoolean(right()));
                     break;
 
                 case BinaryExpressionType.Or:
-                    Result = Convert.ToBoolean(left()) || Convert.ToBoolean(right());
+                    Result = (left() != CalcNull.Value && Convert.ToBoolean(left()))
+                        || (right() != CalcNull.Value && Convert.ToBoolean(right()));
                     break;
 
                 case BinaryExpressionType.Div:
+                    if (left() == CalcNull.Value || right() == CalcNull.Value)
+                        throw new InvalidOperationException("Cannot do arithmetic operations with null values!");
                     Result = IsReal(left()) || IsReal(right())
                                  ? Numbers.Divide(left(), right())
                                  : Numbers.Divide(Convert.ToDouble(left()), right());
-                    break;
+                    break; ;
 
                 case BinaryExpressionType.Equal:
                     // Use the type of the left operand to make the comparison
-                    Result = CompareUsingMostPreciseType(left(), right()) == 0;
+                    try
+                    {
+                        Result = CompareUsingMostPreciseType(left(), right()) == 0;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        Result = false;
+                    }
                     break;
 
                 case BinaryExpressionType.Greater:
                     // Use the type of the left operand to make the comparison
-                    Result = CompareUsingMostPreciseType(left(), right()) > 0;
+                    try
+                    {
+                        Result = CompareUsingMostPreciseType(left(), right()) > 0;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        Result = false;
+                    }
                     break;
 
                 case BinaryExpressionType.GreaterOrEqual:
                     // Use the type of the left operand to make the comparison
-                    Result = CompareUsingMostPreciseType(left(), right()) >= 0;
+                    try
+                    {
+                        Result = CompareUsingMostPreciseType(left(), right()) >= 0;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        Result = false;
+                    }
                     break;
 
                 case BinaryExpressionType.Lesser:
                     // Use the type of the left operand to make the comparison
-                    Result = CompareUsingMostPreciseType(left(), right()) < 0;
+                    try
+                    {
+                        Result = CompareUsingMostPreciseType(left(), right()) < 0;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        Result = false;
+                    }
                     break;
 
                 case BinaryExpressionType.LesserOrEqual:
                     // Use the type of the left operand to make the comparison
-                    Result = CompareUsingMostPreciseType(left(), right()) <= 0;
+                    try
+                    {
+                        Result = CompareUsingMostPreciseType(left(), right()) <= 0;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        Result = false;
+                    }
                     break;
 
                 case BinaryExpressionType.Minus:
@@ -153,7 +214,14 @@ namespace NCalc.Domain
 
                 case BinaryExpressionType.NotEqual:
                     // Use the type of the left operand to make the comparison
-                    Result = CompareUsingMostPreciseType(left(), right()) != 0;
+                    try
+                    {
+                        Result = CompareUsingMostPreciseType(left(), right()) != 0;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        Result = true;
+                    }
                     break;
 
                 case BinaryExpressionType.Plus:
@@ -173,22 +241,36 @@ namespace NCalc.Domain
                     break;
 
                 case BinaryExpressionType.BitwiseAnd:
+                    if (left() == CalcNull.Value || right() == CalcNull.Value)
+                        throw new InvalidOperationException("Cannot do bitwise operations with null values!");
                     Result = Convert.ToUInt16(left()) & Convert.ToUInt16(right());
                     break;
 
+
                 case BinaryExpressionType.BitwiseOr:
+                    if (left() == CalcNull.Value || right() == CalcNull.Value)
+                        throw new InvalidOperationException("Cannot do bitwise operations with null values!");
                     Result = Convert.ToUInt16(left()) | Convert.ToUInt16(right());
                     break;
 
+
                 case BinaryExpressionType.BitwiseXOr:
+                    if (left() == CalcNull.Value || right() == CalcNull.Value)
+                        throw new InvalidOperationException("Cannot do bitwise operations with null values!");
                     Result = Convert.ToUInt16(left()) ^ Convert.ToUInt16(right());
                     break;
 
+
                 case BinaryExpressionType.LeftShift:
+                    if (left() == CalcNull.Value || right() == CalcNull.Value)
+                        throw new InvalidOperationException("Cannot do bitwise operations with null values!");
                     Result = Convert.ToUInt16(left()) << Convert.ToUInt16(right());
                     break;
 
+
                 case BinaryExpressionType.RightShift:
+                    if (left() == CalcNull.Value || right() == CalcNull.Value)
+                        throw new InvalidOperationException("Cannot do bitwise operations with null values!");
                     Result = Convert.ToUInt16(left()) >> Convert.ToUInt16(right());
                     break;
             }

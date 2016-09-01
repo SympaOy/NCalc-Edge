@@ -28,6 +28,7 @@ namespace NCalc
 
             OriginalExpression = expression;
             Options = options;
+            Parameters["null"] = CalcNull.Value;
         }
 
         public Expression(LogicalExpression expression, EvaluateOptions options = EvaluateOptions.None)
@@ -138,7 +139,7 @@ namespace NCalc
                     {
                         Rwl.ReleaseWriterLock();
                     }
-
+                    
                     CleanCache();
 
                     Trace.TraceInformation("Expression added to cache: " + expression);
@@ -246,14 +247,16 @@ namespace NCalc
                     }
 
                     ParsedExpression.Accept(visitor);
-                    results.Add(visitor.Result);
+                    var res = visitor.Result;
+                    results.Add(res == CalcNull.Value ? null : res);
                 }
 
                 return results;
             }
 
             ParsedExpression.Accept(visitor);
-            return visitor.Result;
+            var result = visitor.Result;
+            return result == CalcNull.Value ? null : result;
         }
 
         public event EvaluateFunctionHandler EvaluateFunction;

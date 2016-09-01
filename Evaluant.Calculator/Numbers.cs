@@ -16,6 +16,8 @@ namespace NCalc
 
         public static object Add(object a, object b)
         {
+            if (a == CalcNull.Value || b == CalcNull.Value)
+                throw new InvalidOperationException("Cannot do arithmetic operations with null values!");
             a = ConvertIfString(a);
             b = ConvertIfString(b);
 
@@ -246,6 +248,8 @@ namespace NCalc
 
         public static object Soustract(object a, object b)
         {
+            if (a == CalcNull.Value || b == CalcNull.Value)
+                throw new InvalidOperationException("Cannot do arithmetic operations with null values!");
             a = ConvertIfString(a);
             b = ConvertIfString(b);
 
@@ -465,6 +469,8 @@ namespace NCalc
 
         public static object Multiply(object a, object b)
         {
+            if (a == CalcNull.Value || b == CalcNull.Value)
+                throw new InvalidOperationException("Cannot do arithmetic operations with null values!");
             a = ConvertIfString(a);
             b = ConvertIfString(b);
 
@@ -666,6 +672,8 @@ namespace NCalc
 
         public static object Divide(object a, object b)
         {
+            if (a == CalcNull.Value || b == CalcNull.Value)
+                throw new InvalidOperationException("Cannot do arithmetic operations with null values!");
             a = ConvertIfString(a);
             b = ConvertIfString(b);
 
@@ -867,6 +875,8 @@ namespace NCalc
 
         public static object Modulo(object a, object b)
         {
+            if (a == CalcNull.Value || b == CalcNull.Value)
+                throw new InvalidOperationException("Cannot do arithmetic operations with null values!");
             a = ConvertIfString(a);
             b = ConvertIfString(b);
 
@@ -1071,17 +1081,17 @@ namespace NCalc
             a = ConvertIfString(a);
             b = ConvertIfString(b);
 
-            if (a == null && b == null)
+            if (a == null && b == null || a == CalcNull.Value && b == CalcNull.Value)
             {
                 return null;
             }
 
-            if (a == null)
+            if (a == null || a == CalcNull.Value)
             {
                 return b;
             }
 
-            if (b == null)
+            if (b == null || b == CalcNull.Value)
             {
                 return a;
             }
@@ -1132,17 +1142,17 @@ namespace NCalc
             a = ConvertIfString(a);
             b = ConvertIfString(b);
 
-            if (a == null && b == null)
+            if (a == null && b == null || a == CalcNull.Value && b == CalcNull.Value)
             {
                 return null;
             }
 
-            if (a == null)
+            if (a == null || a == CalcNull.Value)
             {
                 return b;
             }
 
-            if (b == null)
+            if (b == null || b == CalcNull.Value)
             {
                 return a;
             }
